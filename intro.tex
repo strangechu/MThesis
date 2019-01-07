@@ -19,20 +19,29 @@ Two-dimensional projection data is the key information to predict three-dimensio
 Human eyes can easily track moving objects, but tracking moving objects, especially bird flocks, is a challenging task in computer vision. We use use animal tracking technique for this task. This part is done using interactive feature tracking technique proposed by Buchanan et al.\cite{Tracking}. Interactive feature tracking is the process of extracting long and accurate tracks of three-dimensional features observed in two-dimensional video. Although the system is designed to track feature points, such as human face or eyes, it is also suitable for tracking bird flock, which contains multiple small trace targets that can also be treated as feature points.
 
 
-After the track data is obtained, predicting distance is next step. Based on our observations and boid flock models, we define two properties that a should have to retain the quality of flock motion. First, considering one bird flying trajectory, we do not expect a bird in frame f to appear too far from its position in frame f-1 from its previous speed. That is, changes in position tend to be gradual. This is the first property: trajectory smoothness. Now we considering a group of birds. Reynolds proposed three steering behavior rules: separation, cohesion and alignment\cite{Boid}. In case of flock simulation, three rules are considered as three forces applied to each bird in each simulation steps. We also apply these rules in our system as the second property, flock behavior similarity. Considering these rules, target position in frame $f$ can be predicted if we have position in frame $f-1$. We consider an image sequence of length $F$ frames as input, with $N$ birds in each frame. Track data contains two-dimensional projection of each bird in the input video. The set of track data is denoted $P={p_n^f}n<N,f<F$ , where $p_n^f=(x_n^f, y_n^f)$ . We want to predict depth dnf of bird n in frame f, while maintain the two properties above, as shown in figure (1). The quality of a flight with a candidate depth set $X$ can be defined as:
+\begin{figure}[h]
+ \begin{center}
+  \includegraphics[width=1.0\textwidth]{view.eps}
+ \end{center}
+ \caption{View scenario}
+ \label{figure:view}
+\end{figure}
+
+
+After the track data is obtained, predicting distance is next step. Based on our observations and boid flock models, we define two properties that a should have to retain the quality of flock motion. First, considering one bird flying trajectory, we do not expect a bird in frame f to appear too far from its position in frame f-1 from its previous speed. That is, changes in position tend to be gradual. This is the first property: trajectory smoothness. Now we considering a group of birds. Reynolds proposed three steering behavior rules: separation, cohesion and alignment\cite{Boid}. In case of flock simulation, three rules are considered as three forces applied to each bird in each simulation steps. We also apply these rules in our system as the second property, flock behavior similarity. Considering these rules, target position in frame $f$ can be predicted if we have position in frame $f-1$. We consider an image sequence of length $F$ frames as input, with $N$ birds in each frame. Track data contains two-dimensional projection of each bird in the input video. The set of track data is denoted $P=\big\{p_n^f\big\}_{n=1...N,f=1...F}$ , where $p_n^f=(x_n^f, y_n^f)$, representing two-dimensional projection on screen, as shown in figure (\ref{figure:view}). We want to predict depth $d_n^f$ of bird $n$ in frame $f$, while maintain the two properties above. The quality of a flight with a candidate depth set $X$ can be defined as:
 
 
 \begin{equation}\label{eq:1}
- E(X) = \sum_{n = 0}^{N-1} \sum_{f = 0}^{F-1}e(n,f)
+ E(X) = \sum_{n = 1}^{N} \sum_{f = 1}^{F}e(n,f)
 \end{equation}
 
 
 \begin{equation}\label{eq:2}
- e(n,f) = \lambda_t(p_n^f, p_n^{f-1}) + \lambda_f(p_n^f, p_n^{f-1})
+ e(n,f) = \lambda_tt(p_n^f, p_n^{f-1}) + \lambda_ff(p_n^f, p_n^{f-1})
 \end{equation}
 
 
-$e(n,f)$ denotes error function for bird n in frame f, which includes a trajectory smoothness term, $t(t.)$, and a flock behavior term, $f(.)$. $\lambda_s$ and $\lambda_t$ are tuning parameters respecting to trajectory smoothness and flock behavior. Thus, the predicting problem can be restated as an optimization problem: choose $X$ to minimize $E(X)$. These terms will be further discussed in detail in later chapters.
+$e(n,f)$ denotes error function for bird n in frame f, which includes a trajectory smoothness term$t(t.)$, and a flock behavior term$f(.)$. $\lambda_s$ and $\lambda_t$ are tuning parameters respecting to trajectory smoothness and flock behavior. Thus, the predicting problem can be restated as an optimization problem: choose $X$ to minimize $E(X)$. These terms will be further discussed in detail in later chapters.
 
 
 Note that our contribution is in predicting three-dimensional flock motion from two-dimensional projection, not in tracking bird flocks.
