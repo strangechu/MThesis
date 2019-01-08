@@ -1,0 +1,17 @@
+\chapter{Related Work}
+
+\section{Animal simulation}
+
+Computer graphic researchers have been fascinated by creating life-like computer-generated creatures. Several models are proposed for the nature motion of animals. Most of this research focus on humans or terrestrial animals. Social force model proposed by Helbing and Molnar \cite{Social} has been widely used in pedestrian behavior simulation. Miller \cite{Snake} proposed a physically-based simulation method for snakes and worms. Satoi et al. proposed a unified motion planner \cite{Fish} that models fish motion with different swimming styles.
+
+\section{Bird flight simulation}
+
+Simulation of bird flight has also gained attention for creating life-like creatures. The work of Wu and Popović \cite{Flight} describe a physics-based method for synthesis of bird flight animations by given user-specified three-dimensional path. Ju et al. \cite{Flappy} proposed a data-driven approach for controlling flapping flight. These works focus on simulating bird behavior. However, they simulate single bird locomotion based on its structure and aerodynamics, which does not consider the interaction between birds in a flock. Nevertheless, synthesizing realistic behavior of bird is our common goal. 
+
+\section{Crowd simulation}
+
+Crowd simulation is the most commonly used simulation system in games and movies to make crowded scenes. Crowdbrush, proposed by Ulicny et al. \cite{Brush} is a tool for interactive authoring of real-time crowd scenes. As a pioneer of controlling crowds, it provides interface for controlling crowds with brush tools. But the control operations are still limited to small group of individuals by specifying the property or rule, which still needs lots of work for controlling large crowds. Golaem \cite{Golaem} is a mature commercial crowd simulation software widely used in video games. Both tools allow user to manage and control crowds based on path planning and steering behaviors. However, modeling aerial motion is more challenging than humans or terrestrial animals, since birds do not only stay on the ground as they do. Golaem also includes tool for controlling flocks, but it has much less function than tools for crowd simulation, only providing target-based control and collision avoidance.
+
+\section{2D-based modeling}
+
+In computer graphics, Image-based modeling is a method which relies on a set of two-dimension images of a scene to generate a three-dimensional model. Iwasaki et al. \cite{Cloud} proposed a modeling method of clouds from a single photograph. Okabe et al. \cite{Fluid} models volumetric fluid such as smoke or fire, from sparse multi-view images. For most 3D reconstruction like \cite{Reconstruction}, systems are based on shapes from silhouette in multiple views. Generating three-dimensional curves through sketching is also a rich research domain. Pentland and Kuo \cite{Sketch} presented an approach for reconstructing three-dimension object from two-dimensional sketch. In work of Ijiri et al \cite{Plant}, they presented a system for modeling flowers which synthesizes three-dimensional botanical structure by constant curvature with two-dimensional sketch.
