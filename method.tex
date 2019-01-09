@@ -22,7 +22,7 @@ In most simulation system, velocity of an object is calculated upon mass and for
 \end{equation}
 
 
-where v(f) denotes velocity, and b(f) denotes bird position in world space. This makes our optimization system simpler and faster: we can calculate velocity of each bird in current frame and do not need to keep track of it. Although position-based dynamics system is not physically accurate, since our goal is to make visually plausible flock motion, we use it in our system.
+where $v(f)$ denotes velocity, and $b(f)$ denotes bird position in world space. This makes our optimization system simpler and faster: we can calculate velocity of each bird in current frame and do not need to keep track of it. Although position-based dynamics system is not physically accurate, since our goal is to make visually plausible flock motion, we use it in our system.
 For s and t in equation \ref{eq:2}, we use the simple Euclidean distance function on the two positions. We have also experimented with an acceleration term, of the form $s(p_n^f, p_n^{f-1}, p_n^{f-2})$, but it increases the computation cost, and do not produce better result.
 
 
@@ -37,28 +37,40 @@ The main challenge of using interactive feature tracking on tracking birds is di
 \section{Trajectory smoothness}
 
 
-Trajectory smoothness is the first term in our error function in equation \ref{eq:1}, denoted as $t(.)$. In this term, only the flying trajectory of one bird is considered. We assume that birds minimize its velocity change during flight. The importance of retaining trajectory smoothness is especially obvious when bird is on turning point of the track. In our experiment, we found that if trajectory smooth is not considered, birds will show a sudden turn motion, which is unnatural. Figure \ref{figure:turn} (TODO) shows the scenario of sudden turn.
-Here, we consider it in two terms: speed change and displacement change, denoted as:
+\begin{figure}[h]
+ \begin{center}
+  \includegraphics[width=1.0\textwidth]{turn.eps}
+ \end{center}
+ \caption{Trajectory smooth. Figure on the left shows the scenario of sudden turn, while the trajectory on the right is considered better trajectory, since the speed difference is smaller.}
+ \label{figure:turn}
+\end{figure}
 
+
+
+Trajectory smoothness is the first term in our error function in equation \ref{eq:1}, denoted as $t(.)$. In this term, only the flying trajectory of one bird is considered. We assume that birds minimize its velocity change during flight. The importance of retaining trajectory smoothness is especially obvious when bird is on turning point of the track. In our experiment, we found that if trajectory smooth is not considered, birds will show a sudden turn motion, which is unnatural. Figure \ref{figure:turn} shows the scenario of sudden turn. Trajectory smoothness term is then denoted as:
 
 \begin{equation}\label{eq:4}
-{\Delta}d_n^f = b_n^f-b_n^{f-1}
+ t(p_n^f, p_n^{f-1},d_n^f) = v_n^f = b_n^f-b_n^{f-1}
 \end{equation}
-\begin{equation}\label{eq:5}
-{\Delta}v_n^f = {\Delta}d_n^f-{\Delta}d_n^{f-1}
-\end{equation}
-
-
-where $b_f^n$ denotes projected bird position respecting to track position $p_f^n$ and depth $d_f^n$ . By combining these two terms, we can obtain:
-\begin{equation}\label{eq:6}
-t(p_n^f, p_n^{f-1},d_n^f) = \lambda_d|{|\Delta}d_n^f||+\lambda_v||{\Delta}v_n^f||
-\end{equation}
-
 
 as error function to be minimized in optimization stage to retain trajectory smoothness.
 
+%where $b_f^n$ denotes projected bird position respecting to track position $p_f^n$ and depth $d_f^n$ . By combining these two terms, we can obtain:
+%\begin{equation}\label{eq:6}
+%t(p_n^f, p_n^{f-1},d_n^f) = \lambda_d|{|\Delta}d_n^f||+\lambda_v||{\Delta}v_n^f||
+%\end{equation}
+
 
 \section{Flock behavior similarity}
+
+
+\begin{figure}[h]
+ \begin{center}
+  \includegraphics[width=1.0\textwidth]{boid.eps}
+ \end{center}
+ \caption{Three boid rules. (left) separation behavior, (middle) Cohesion behavior, (right) alignment behavior.}
+ \label{figure:boid}
+\end{figure}
 
 
 We use Reynolds' boid model as basic flock behaviors. Each bird in flock, which is called boid, observes three steering rules: separation, cohesion, and alignment. The definitions of these steering rules rely on the neighbors of the boid. The neighbors of one boid include its surrounding neighbors who are sufficiently close, and each rule has its perceptual neighborhood. Figure \ref{figure:boid} illustrates the definition of three rules. To calculate flock similarity, target position of boid $n$ in frame $f$ must be calculated first, and then compared with the predicted boid position. Target position is the sum of the three rules above. Here we further the calculation of three steering rules.
@@ -85,7 +97,7 @@ Frame-by-frame optimizations means we do not do the optimization in one equation
 We implement the optimization part using NLopt library \cite{NLopt} with optimization algorithm constrained optimization by linear approximation (COBYLA)\cite{COBYLA}. We assume bird flock fly in an area in view field of the camera, a near and a far constrained of depth is set as:
 
 
-\begin{equation}\label{eq:7}
+\begin{equation}\label{eq:depth}
 d_{near} < d < d_{far}
 \end{equation}
 
@@ -100,5 +112,5 @@ We have done experiment repeatedly to find best parameters.
 
 
 After we get the optimized depth data, next step is to visualize the optimized flock motion. We implement it with Unity\cite{Unity}. And optimization system is loaded as plugin to make it can be used in an interactive way.
-After the position of each bird in every frame is predicted, to make good flock motion, refinement must be done.
+After the position of each bird in every frame is predicted, to make good flock motion, refinement must be done. Since the system only finds optimal position of each bird, orientation needs to be assigned to complete flock motion. Here we just simply decide orientation of each bird frame-by-frame based on its current position and position in last frame.
 (TODO:MODELING DETAIL)
