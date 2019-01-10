@@ -5,7 +5,7 @@
  \begin{center}
   \includegraphics[width=1.0\textwidth]{system.eps}
  \end{center}
- \caption{System overview}
+ \caption{Method overview}
  \label{figure:system}
 \end{figure}
 
@@ -18,7 +18,7 @@ In most simulation system, velocity of an object is calculated upon mass and for
 
 
 \begin{equation}\label{eq:3}
- v(f) = b(f)-b(f-1)
+ \vec{v(f)} = b(f)-b(f-1)
 \end{equation}
 
 
@@ -85,27 +85,61 @@ Cohesion steering behavior give a boid the ability to approach and form a group 
 Alignment steering behavior gives a boid the ability to align itself, heading in the same direction with other nearby boids. However, since in the optimization stage, we only consider optimizing position of each boid, we do not use alignment rule here. Instead, we refine the alignment after optimization is done.
 
 
-Combining rules above, now we can calculate flock behavior similarity term $f(.)$ in equation (2) by calculating Euclidean distance between the target position and predicted position. Algorithm of calculating flock behavior similarity is shown in figure \ref{figure:flock}. (TODO:FIGURE)
+Combining rules above, now we can calculate flock behavior similarity term $f(.)$ in equation \ref{eq:2} by calculating Euclidean distance between the target position and predicted position. Algorithm of calculating flock behavior similarity is shown in figure \ref{figure:flock}. (TODO:FIGURE)
 In most flock simulation approaches, collision is detected in advance by adjusting its direction and speed when other agents are about to collide. In our flock model, since we have separation rule that separate, birds tend to move away to each other when they are too close. Therefore, we do not handle collision avoidance.
 
 
 \section{Optimization}
 
+\begin{algorithm}% [H]
+\SetAlgoLined
+\KwData{Trace set $X=\big\{d_n^f\big\}$}
+%\KwResult{how to write algorithm with \LaTeX2e }
+\tcp{Algorithm start}
+Assign N bird positions in frame 1 \;
+\tcp{Frame-by-frame optimization}
+\For{$i\leftarrow 2$ \KwTo $F$}{
+  $sum \leftarrow 0$ \;
+  \tcp{Initial speed}
+  \For{$j\leftarrow 1$ \KwTo $N$}{
+    $\vec{v} \leftarrow b_j^i - b_j^{i-1}$ \;
+    \If{i = 2}{
+      $sum\leftarrow sum + || ||\vec{v}|| - \lambda_{speed}||$ \;
+    }
+    \Else{
+      \tcp{Trajectory smoothness}
+      $\vec{v_{last}} \leftarrow b_j^{i-1} - b_j^{i-2}$ \;
+      $sum\leftarrow sum + \lambda_{t}|| ||\vec{v}|| - ||\vec{v_{last}}||  ||$ \;      
+      \tcp{Flock behavior similarity}
+      Calculate separation force $\vec{s}$ \;
+      Calculate separation force $\vec{c}$ \;
+      $target \leftarrow b_j^{i-1} + (\lambda_{sep}\vec{s}+(1-\lambda_{sep})\vec{c})$ \;   
+      $sum\leftarrow sum + \lambda_{f}|| b_j^i - target  ||$ \; 
+    }
+  }
+  Minimize $sum$ \;
+}
+
+\caption{Optimization algorithm detail.}
+\label{algo:optimization}
+\end{algorithm}
+
+
 
 The task in our optimization stage is to minimize error function equation \ref{eq:1} with target depth set $X$. Totally, since we have track data of $N$ birds in $F$ frames, there are $N{\times}F$ target depths. If the optimization is done globally, the computation time will be costly. Since our goal is to make system that user can adjust the result interactively in real time, we consider doing the optimization frame-by-frame.
-Frame-by-frame optimizations means we do not do the optimization in one equation, instead, we predict $N$ depths in frame $f$ from the first frame to next frame, based on the results from last frames. This approach greatly decreases computation time, making it possible for user to do the optimization repeatedly while adjusting parameters. Figure \ref{figure:optimization} (TODO:FIGURE) shows our optimization algorithm.
-We implement the optimization part using NLopt library \cite{NLopt} with optimization algorithm constrained optimization by linear approximation (COBYLA)\cite{COBYLA}. We assume bird flock fly in an area in view field of the camera, a near and a far constrained of depth is set as:
+Frame-by-frame optimizations means we do not do the optimization in one equation, instead, we predict $N$ depths in frame $f$ from the first frame to next frame, based on the results from last frames. This approach greatly decreases computation time, making it possible for user to do the optimization repeatedly while adjusting parameters.
+We implement the optimization part using NLopt library \cite{NLopt} with optimization algorithm constrained optimization by linear approximation (COBYLA)\cite{COBYLA}. We assume bird flock fly in an area in view field of the camera, a near and a far constraint of depth is set as:
 
 
 \begin{equation}\label{eq:depth}
 d_{near} < d < d_{far}
 \end{equation}
 
-
+Since target error function can be calculated in each frame, with the inequality constraint \ref{eq:depth}, optimized $X$ can be found as result.  Algorithm \ref{algo:optimization}  shows our optimization algorithm.
 (TODO:OPTIMIZATION DETAIL)
 
 
-We have done experiment repeatedly to find best parameters.
+By now, we have introduced 5 parameters for optimization stage: $\lambda_{t}$ for weight of trajectory smoothness, $\lambda_{f}$ for weight of flock behavior similarity, $\lambda_{sep}$ for weight of separation rule, d_{near} for near constraint of depth and d_{far} for far constraint. In our system, these parameters are treated as interactive elements of our system. Since the optimization can be done in seconds, user can see the result and adjust parameter can do the optimization again to get better results. 
 
 
 \section{Modeling flock motion}
