@@ -14,35 +14,19 @@ In this paper, we propose an alternative method for modeling bird flock. Our met
 The biggest challenge of this approach is that RGB video does not contain depth information. This makes flock motion synthesizing a difficult task. Human eyes can easily track moving objects, but tracking moving objects, especially bird flocks, is a challenging task in computer vision. The reason why we use RGB video as input is, obtaining depth information of bird flock with depth camera is difficult in outdoor scene. In work from Ju et al.\cite{Flappy}, or recording locomotion of a single bird as training data, they recorded the motion of dove using marker-based optical motion capture and high-speed video cameras for their work. They used 28 cameras to capture a single dove motion in region of 10m×10m×7m. Apparently, more space and devices are needed if we do the capture on a bird flock. In fact, we did capture bird flock motion by taking bird video using a 360-degree camera in outdoor scenes, but we failed to get useful video due to bad condition of outdoor environment. And it is also difficult to set up an indoor scene as they did for capturing bird flocks, since the space needed is too large. Thus, we consider predicting depth information of bird flock is helpful for making bird flock motion using real video as reference.
 
 
-Two-dimensional projection data is the key information to predict three-dimension position. The main contribution of this research is to predict three-dimensional from two-dimensional tracking data retrieved from input video. That is, to predict distance from each bird to the camera in each frame. With predefined camera parameters, if we can predict the distance between the bird and the camera, three-dimensional position of the bird can be obtained.
+Two-dimensional projection data is the key information to predict three-dimension position. The main contribution of this research is to predict three-dimensional from two-dimensional tracking data retrieved from input video. That is, to predict distance from each bird to the camera in each frame. With predefined camera parameters and projection on screen $p_n^f$, if we can predict the distance between the bird and the camera, three-dimensional position of the bird $b_n^f$ in frame $f$ of bird $n$ can be obtained:
 
 
-Human eyes can easily track moving objects, but tracking moving objects, especially bird flocks, is a challenging task in computer vision. We use animal tracking technique for this task. This part is done using interactive feature tracking technique proposed by Buchanan et al.\cite{Tracking}. Interactive feature tracking is the process of extracting long and accurate tracks of three-dimensional features observed in two-dimensional video. Although the system is designed to track feature points, such as human face or eyes, it is also suitable for tracking bird flock, which contains multiple small trace targets that can also be treated as feature points.
-
-
-\begin{figure}[h]
- \begin{center}
-  \includegraphics[width=1.0\textwidth]{view.eps}
- \end{center}
- \caption{View scenario in frame $f$.}
- \label{figure:view}
-\end{figure}
-
-
-After the track data is obtained, predicting distance is next step. Based on our observations and boid flock models, we define two properties that a should have to retain the quality of flock motion. First, considering one bird flying trajectory, we do not expect a bird in frame $f$ to appear too far from its position in frame $f-1$ from its previous speed. That is, changes in position tend to be gradual. This is the first property: trajectory smoothness. Now we considering a group of birds. Reynolds proposed three steering behavior rules: separation, cohesion and alignment\cite{Boid}. In case of flock simulation, three rules are considered as three forces applied to each bird in each simulation steps. We also apply these rules in our system as the second property, flock behavior similarity. Considering these rules, target position in frame $f$ can be predicted if we have position in frame $f-1$. We consider an image sequence of length $F$ frames as input, with $N$ birds in each frame. Track data contains two-dimensional projection of each bird in the input video. The set of track data is denoted $P=\big\{p_n^f\big\}_{n=1...N,f=1...F}$ , where $p_n^f=(x_n^f, y_n^f)$, representing two-dimensional projection on screen, as shown in figure \ref{figure:view}. We want to predict depth $d_n^f$ of bird $n$ in frame $f$, while maintain the two properties above. The quality of a flight with a candidate depth set $X=\big\{d_n^f\big\}_{n=1...N,f=1...F}$ can be defined as:
-
-
-\begin{equation}\label{eq:1}
- E(X) = \sum_{n = 1}^{N} \sum_{f = 1}^{F}e(n,f)
+\begin{equation}\label{eq:projection}
+ b_n^f=Proj(p_n^f,d_n^f)
 \end{equation}
 
 
-\begin{equation}\label{eq:2}
- e(n,f) = \lambda_tt(p_n^f, p_n^{f-1},d_n^f) + \lambda_ff(p_n^f, p_n^{f-1},d_n^f)
-\end{equation}
+To predict $d$, track data must be obtained from input video first. We use animal tracking technique for this task. This part is done using interactive feature tracking technique proposed by Buchanan et al.\cite{Tracking}. Interactive feature tracking is the process of extracting long and accurate tracks of three-dimensional features observed in two-dimensional video. Although the system is designed to track feature points, such as human face or eyes, it is also suitable for tracking bird flock, which contains multiple small trace targets that can also be treated as feature points.
 
 
-$e(n,f)$ denotes error function for bird n in frame f, which includes a trajectory smoothness term $t(.)$, and a flock behavior term $f(.)$. $\lambda_s$ and $\lambda_t$ are tuning parameters respecting to trajectory smoothness and flock behavior. Thus, the predicting problem can be restated as an optimization problem: choose $X$ to minimize $E(X)$. These terms will be further discussed in detail in later chapters.
+
+After the track data is obtained, predicting depth of each bird is the next step. Based on our observations and boid flock models, we define two properties that a should have to retain the quality of flock motion. First, considering one bird flying trajectory, we do not expect a bird in frame $f$ to appear too far from its position in frame $f-1$ from its previous speed. That is, changes in position tend to be gradual. This is the first property: trajectory smoothness. Now we consider a group of birds. Reynolds proposed three steering behavior rules: separation, cohesion and alignment\cite{Boid}. In case of flock simulation, three rules are considered as three forces applied to each bird in each simulation steps. We also apply these rules in our system as the second property, flock behavior similarity. Based on the two rules, we design an error function that shows the difference between the desired target position. Thus, the task of predicting depth can be restated as on optimization problem: choose depth set of $N$ bird in $F$ frames to minimize the error function. However, optimizing over $N×F$ depths takes time, making the system far from interactive system. To overcome this issue, we propose a frame-by-frame optimization framework. In our implementation, we just optimize the position of $N$ birds in one frame based on the result on previous frames, then optimize the positions in next frame until all frame are optimized. By this frame-by-frame framework, the computation time is greatly decreased. In our experiment, an 30-fps video with 200 frames and 5 birds can be optimized in less than one second.(TODO: MORE RESULT?) We will further discuss the details of the optimization method in Chapter 3.
 
 
 Note that our contribution is in predicting three-dimensional flock motion from two-dimensional projection, not in tracking bird flocks.
@@ -57,7 +41,10 @@ The second stage is optimization stage. In this stage, optimization is performed
 The last stage is refinement stage. Since the system only predict the position in last stage, the orientation of each bird is calculated based on its position in each frame to complete the flock motion as output.
 
 
-We implemented a flock simulation system to synthesize bird videos that fit the requirements of the system. Despite we used generated results as inputs, we assume the 2D projection to the camera is unknown. This assumption makes the system can also be used for real bird video.
+We implemented a flock simulation system to synthesize bird videos as input. that fit the requirements of the system. Despite we used generated results as inputs, we assume the two-dimensional projection to the camera is unknown. This assumption makes the system can also be used for real bird video. (TODO: EXPERIMENT AND RESULTS DETAIL)
+
+
+(TODO: CONTRIBUTION SUMMARY??)
 
 
 The structure of the paper is as follows: In chapter 2, we discuss related work. In chapter 3, we present the overall design of our system discussing the requirements needed for predicting flock motion, and give implementation detail of our system. In chapter 4, we present the results generated by our system. In chapter 5, we discuss about future work and limitations of our system. Finally, we summarize this research in chapter 6.

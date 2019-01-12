@@ -13,17 +13,39 @@
 \section{Method overview}
 
 
-Figure\ref{figure:system}  shows an overview of our method. As mentioned before, our method synthesizes three-dimensional bird flock motion from input video. First, trace data of each bird in the video is retrieved. With the interactive feature tracking technique, track data, which contains two-dimensional projection position trajectory of each bird, can be retrieved with the help of user's indications. Next, depth set $X$ is predicted by minimizing error function as Equation \ref{eq:1}. With the predefined camera parameter and optimal depth d, we can get world position of the bird from its screen position.
-In most simulation system, velocity of an object is calculated upon mass and force in simulation steps. However, since our optimization method is over frames, we use position-based dynamics system \cite{PBD}, in which velocity in frame f is denoted as
+\begin{figure}[h]
+ \begin{center}
+  \includegraphics[width=1.0\textwidth]{view.eps}
+ \end{center}
+ \caption{View scenario in frame $f$.}
+ \label{figure:view}
+\end{figure}
 
+
+Figure \ref{figure:system}  shows an overview of our method. As mentioned in Chapter 1, our method synthesizes three-dimensional bird flock motion from input video by predicting depths for each bird in each frame. First, trace data of each bird in the video is retrieved from input video. With the interactive feature tracking technique, track data, which contains two-dimensional projection position trajectory of each bird, can be retrieved with the help of user's indications. The set of track data is denoted $P=\big\{p_n^f\big\}_{n=1...N,f=1...F}$ , where $p_n^f=(x_n^f, y_n^f)$, representing two-dimensional projection on screen, as shown in figure \ref{figure:view} Next, depth for each bird in every frame is predicted in optimization step. The goal of predicting depth is to maintain the quality of flight trajectory. Here, we consider an image sequence of length $F$ frames as input, with $N$ birds in each frame. Track data contains two-dimensional projection of each bird in the input video. The set of track data is denoted $P=\big\{p_n^f\big\}_{n=1...N,f=1...F}$ , where $p_n^f=(x_n^f, y_n^f)$, representing two-dimensional projection on screen, as shown in Figure \ref{figure:view}. We want to predict depth $d_n^f$ of bird $n$ in frame $f$, while maintain the two properties above. The quality of a flight with a candidate depth set $X=\big\{d_n^f\big\}_{n=1...N,f=1...F}$ can be defined as:
+
+
+\begin{equation}\label{eq:1}
+ E(X) = \sum_{n = 1}^{N} \sum_{f = 1}^{F}e(n,f)
+\end{equation}
+
+
+\begin{equation}\label{eq:2}
+ e(n,f) = \lambda_tt(p_n^f, p_n^{f-1},d_n^f) + \lambda_ff(p_n^f, p_n^{f-1},d_n^f)
+\end{equation}
+
+
+$e(n,f)$ denotes error function for bird n in frame f, which includes a trajectory smoothness term $t(.)$, and a flock behavior term $f(.)$. $\lambda_s$ and $\lambda_t$ are tuning parameters respecting to trajectory smoothness and flock behavior. Thus, the predicting problem can be restated as an optimization problem: choose $X$ to minimize $E(X)$. After the optimal $X$ is found, with the predefined camera parameter and optimal depth $d$, we can get world position of the bird from its screen position.
+
+
+In most simulation system, velocity of an object is calculated upon mass and force in simulation steps. However, since our optimization method is over frames, we use position-based dynamics system \cite{PBD}, in which velocity in frame f is denoted as
 
 \begin{equation}\label{eq:3}
  \vec{v(f)} = b(f)-b(f-1)
 \end{equation}
 
-
 where $v(f)$ denotes velocity, and $b(f)$ denotes bird position in world space. This makes our optimization system simpler and faster: we can calculate velocity of each bird in current frame and do not need to keep track of it. Although position-based dynamics system is not physically accurate, since our goal is to make visually plausible flock motion, we use it in our system.
-For s and t in equation \ref{eq:2}, we use the simple Euclidean distance function on the two positions. We have also experimented with an acceleration term, of the form $s(p_n^f, p_n^{f-1}, p_n^{f-2})$, but it increases the computation cost, and do not produce better result.
+For $s$ and $t$ in equation \ref{eq:2}, we use the simple Euclidean distance function on the two positions. We have also experimented with an acceleration term, of the form $s(p_n^f, p_n^{f-1}, p_n^{f-2})$, but it increases the computation cost, and do not produce better result.
 
 
 \section{Bird tracking}
@@ -54,11 +76,6 @@ Trajectory smoothness is the first term in our error function in equation \ref{e
 \end{equation}
 
 as error function to be minimized in optimization stage to retain trajectory smoothness.
-
-%where $b_f^n$ denotes projected bird position respecting to track position $p_f^n$ and depth $d_f^n$ . By combining these two terms, we can obtain:
-%\begin{equation}\label{eq:6}
-%t(p_n^f, p_n^{f-1},d_n^f) = \lambda_d|{|\Delta}d_n^f||+\lambda_v||{\Delta}v_n^f||
-%\end{equation}
 
 
 \section{Flock behavior similarity}
@@ -118,7 +135,7 @@ $\vec{c} \leftarrow \vec{s} / (n-1)$ \;
 \end{algorithm}
 
 
-Combining rules above, now we can calculate flock behavior similarity term $f(.)$ in equation \ref{eq:2} by calculating Euclidean distance between the target position and predicted position. Algorithms of calculating separation and cohesion are shown in Algorithm \ref{algo:separation} and \ref{algo:coherence}. In calculating separation vector \vec{s}, a neighborhood distance $d_{sep}$ is set to decide the minimum distance to keep in flock motion between each birds. Tuning this parameter, which can also be adjusted by user in optimization stage, is considered as an interactive element in our system. In boid algorithm, a neighborhood of cohesion is also set. However, since we assume all birds in input video belong to one flock that are aware of each other, we just consider every birds in the flock for calculating cohesion force. This can also reduce number of parameters while keeping other parameters more focused.
+Combining rules above, now we can calculate flock behavior similarity term $f(.)$ in equation \ref{eq:2} by calculating Euclidean distance between the target position and predicted position. Algorithms of calculating separation and cohesion are shown in Algorithm \ref{algo:separation} and \ref{algo:coherence}. In calculating separation vector $\vec{s}$, a neighborhood distance $d_{sep}$ is set to decide the minimum distance to keep in flock motion between each birds. Tuning this parameter, which can also be adjusted by user in optimization stage, is considered as an interactive element in our system. In boid algorithm, a neighborhood of cohesion is also set. However, since we assume all birds in input video belong to one flock that are aware of each other, we just consider every birds in the flock for calculating cohesion force. This can also reduce number of parameters while keeping other parameters more focused.
 In most flock simulation approaches, collision is detected in advance by adjusting its direction and speed when other agents are about to collide. In our flock model, since we have separation rule that separate, birds tend to move away to each other when they are too close. Therefore, we do not handle collision avoidance.
 
 
@@ -173,7 +190,7 @@ Since target error function can be calculated in each frame, with the inequality
 (TODO:OPTIMIZATION DETAIL)
 
 
-By now, we have introduced 5 parameters for optimization stage: $\lambda_{t}$ for weight of trajectory smoothness, $\lambda_{f}$ for weight of flock behavior similarity, $\w_{sep}$ for weight of separation rule, $d_{sep}$ for neighborhood distance for separation rule, $d_{near}$ for near constraint of depth and $d_{far}$ for far constraint. In our system, these parameters are treated as interactive elements of our system. Since the optimization can be done in seconds, user can see the result and adjust parameter can do the optimization again to get better results. 
+By now, we have introduced 5 parameters for optimization stage: $\lambda_{t}$ for weight of trajectory smoothness, $\lambda_{f}$ for weight of flock behavior similarity, $w_{sep}$ for weight of separation rule, $d_{sep}$ for neighborhood distance for separation rule, $d_{near}$ for near constraint of depth and $d_{far}$ for far constraint. In our system, these parameters are treated as interactive elements of our system. Since the optimization can be done in seconds, user can see the result and adjust parameter can do the optimization again to get better results. 
 
 
 \section{Modeling flock motion}
