@@ -85,7 +85,40 @@ Cohesion steering behavior give a boid the ability to approach and form a group 
 Alignment steering behavior gives a boid the ability to align itself, heading in the same direction with other nearby boids. However, since in the optimization stage, we only consider optimizing position of each boid, we do not use alignment rule here. Instead, we refine the alignment after optimization is done.
 
 
-Combining rules above, now we can calculate flock behavior similarity term $f(.)$ in equation \ref{eq:2} by calculating Euclidean distance between the target position and predicted position. Algorithm of calculating flock behavior similarity is shown in figure \ref{figure:flock}. (TODO:FIGURE)
+\begin{algorithm}[p]
+\SetAlgoLined
+\tcp{Calculate separation force $\vec{s}$ of bird n}
+$\vec{s} \leftarrow \vec{0}$ \;
+$neighbor \leftarrow 0 $ \;
+\For{$i\leftarrow 1$ \KwTo $N$}{
+  \lIf{i=n}{continue}
+  $distance \leftarrow ||b_n - b_i||$ \; 
+  \If{distance $\leq d_{sep}$}{
+    $neighbor \leftarrow neighbor+1$ \;
+    $\vec{s} \leftarrow \vec{s} + (b_n - b_i) / distance$ \;
+  }
+}
+$\vec{s} \leftarrow \vec{s} / neighbor$ \;
+\caption{Calculation of separation vector $\vec{s}$}
+\label{algo:separation}
+\end{algorithm}
+
+
+\begin{algorithm}[p]
+\SetAlgoLined
+\tcp{Calculate cohesion force $\vec{c}$ of bird n}
+$\vec{c} \leftarrow \vec{0}$ \;
+\For{$i\leftarrow 1$ \KwTo $N$}{
+  \lIf{i=n}{continue}
+  $\vec{c} \leftarrow \vec{c} + (b_i - b_n)$ \;
+}
+$\vec{c} \leftarrow \vec{s} / (n-1)$ \;
+\caption{Calculation of cohesion vector $\vec{c}$}
+\label{algo:coherence}
+\end{algorithm}
+
+
+Combining rules above, now we can calculate flock behavior similarity term $f(.)$ in equation \ref{eq:2} by calculating Euclidean distance between the target position and predicted position. Algorithm of calculating separation and cohesion are shown in Algorithm \ref{algo:separation} and \ref{algo:coherence}.
 In most flock simulation approaches, collision is detected in advance by adjusting its direction and speed when other agents are about to collide. In our flock model, since we have separation rule that separate, birds tend to move away to each other when they are too close. Therefore, we do not handle collision avoidance.
 
 
@@ -112,8 +145,8 @@ Assign N bird positions in frame 1 \;
       $sum\leftarrow sum + \lambda_{t}|| ||\vec{v}|| - ||\vec{v_{last}}||  ||$ \;      
       \tcp{Flock behavior similarity}
       Calculate separation force $\vec{s}$ \;
-      Calculate separation force $\vec{c}$ \;
-      $target \leftarrow b_j^{i-1} + (\lambda_{sep}\vec{s}+(1-\lambda_{sep})\vec{c})$ \;   
+      Calculate cohesion force $\vec{c}$ \;
+      $target \leftarrow b_j^{i-1} + (w_{sep} \vec{s}+(1-w_{sep})\vec{c})$ \;   
       $sum\leftarrow sum + \lambda_{f}|| b_j^i - target  ||$ \; 
     }
   }
