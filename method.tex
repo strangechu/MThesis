@@ -118,11 +118,11 @@ $\vec{c} \leftarrow \vec{s} / (n-1)$ \;
 \end{algorithm}
 
 
-Combining rules above, now we can calculate flock behavior similarity term $f(.)$ in equation \ref{eq:2} by calculating Euclidean distance between the target position and predicted position. Algorithm of calculating separation and cohesion are shown in Algorithm \ref{algo:separation} and \ref{algo:coherence}.
+Combining rules above, now we can calculate flock behavior similarity term $f(.)$ in equation \ref{eq:2} by calculating Euclidean distance between the target position and predicted position. Algorithms of calculating separation and cohesion are shown in Algorithm \ref{algo:separation} and \ref{algo:coherence}. In calculating separation vector \vec{s}, a neighborhood distance $d_{sep}$ is set to decide the minimum distance to keep in flock motion between each birds. Tuning this parameter, which can also be adjusted by user in optimization stage, is considered as an interactive element in our system. In boid algorithm, a neighborhood of cohesion is also set. However, since we assume all birds in input video belong to one flock that are aware of each other, we just consider every birds in the flock for calculating cohesion force. This can also reduce number of parameters while keeping other parameters more focused.
 In most flock simulation approaches, collision is detected in advance by adjusting its direction and speed when other agents are about to collide. In our flock model, since we have separation rule that separate, birds tend to move away to each other when they are too close. Therefore, we do not handle collision avoidance.
 
 
-\section{Optimization}
+\section{Frame-by-frame optimization}
 
 \begin{algorithm}% [H]
 \SetAlgoLined
@@ -159,8 +159,9 @@ Assign N bird positions in frame 1 \;
 
 
 
-The task in our optimization stage is to minimize error function equation \ref{eq:1} with target depth set $X$. Totally, since we have track data of $N$ birds in $F$ frames, there are $N{\times}F$ target depths. If the optimization is done globally, the computation time will be costly. Since our goal is to make system that user can adjust the result interactively in real time, we consider doing the optimization frame-by-frame.
-Frame-by-frame optimizations means we do not do the optimization in one equation, instead, we predict $N$ depths in frame $f$ from the first frame to next frame, based on the results from last frames. This approach greatly decreases computation time, making it possible for user to do the optimization repeatedly while adjusting parameters.
+The task in our optimization stage is to minimize error function equation \ref{eq:1} with target depth set $X$. Totally, since we have track data of $N$ birds in $F$ frames, there are $N{\times}F$ target depths. If the optimization is done globally, the computation time will be costly. Since our goal is to make system that user can adjust the result interactively in real time, we consider doing the optimization frame-by-frame. Frame-by-frame optimizations means we do not optimize Equation \ref{eq:1} directly, instead, we predict $N$ depths in frame $f$ from the first frame to next frame, based on the results from last frames. That is, to optimize Equation \ref{eq:2} for $n=1...N$ This approach greatly decreases computation time, making it possible for user to do the optimization repeatedly while adjusting parameters.
+
+
 We implement the optimization part using NLopt library \cite{NLopt} with optimization algorithm constrained optimization by linear approximation (COBYLA)\cite{COBYLA}. We assume bird flock fly in an area in view field of the camera, a near and a far constraint of depth is set as:
 
 
@@ -172,7 +173,7 @@ Since target error function can be calculated in each frame, with the inequality
 (TODO:OPTIMIZATION DETAIL)
 
 
-By now, we have introduced 5 parameters for optimization stage: $\lambda_{t}$ for weight of trajectory smoothness, $\lambda_{f}$ for weight of flock behavior similarity, $\lambda_{sep}$ for weight of separation rule, $d_{near}$ for near constraint of depth and $d_{far}$ for far constraint. In our system, these parameters are treated as interactive elements of our system. Since the optimization can be done in seconds, user can see the result and adjust parameter can do the optimization again to get better results. 
+By now, we have introduced 5 parameters for optimization stage: $\lambda_{t}$ for weight of trajectory smoothness, $\lambda_{f}$ for weight of flock behavior similarity, $\w_{sep}$ for weight of separation rule, $d_{sep}$ for neighborhood distance for separation rule, $d_{near}$ for near constraint of depth and $d_{far}$ for far constraint. In our system, these parameters are treated as interactive elements of our system. Since the optimization can be done in seconds, user can see the result and adjust parameter can do the optimization again to get better results. 
 
 
 \section{Modeling flock motion}
