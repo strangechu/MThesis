@@ -45,14 +45,14 @@ In most simulation system, velocity of an object is calculated upon mass and for
 \end{equation}
 
 where $v(f)$ denotes velocity, and $b(f)$ denotes bird position in world space. This makes our optimization system simpler and faster: we can calculate velocity of each bird in current frame and do not need to keep track of it. Although position-based dynamics system is not physically accurate, since our goal is to make visually plausible flock motion, we use it in our system.
-For $s$ and $t$ in equation \ref{eq:2}, we use the simple Euclidean distance function on the two positions. We have also experimented with an acceleration term, of the form $s(p_n^f, p_n^{f-1}, p_n^{f-2})$, but it increases the computation cost, and do not produce better result.
+For $s$ and $t$ in equation \ref{eq:2}, we use the simple Euclidean distance function on the two positions. We have also experimented with an acceleration term, of the form $s(p_n^f, p_n^{f-1}, p_n^{f-2})$, but it increases the computation cost, and do not produce better result. Details of each term will be discussed in the following sections.
 
 
 \section{Bird tracking}
 
 
 To obtain trajectory of each bird in the input video, tracking technique is used in our method. We use tracking system ZooTracer\cite{ZooTracer}, developed by Microsoft research, to do the task. ZooTracer is based on interactive feature tracking technique, proposed by Buchanan and Fitzgibbon \cite{Tracking}. With the tracking system, after preprocessing is done, the user can make tracking data interactively from input video in real time. The system predicts the trajectory of single bird in the video based on user's initial indication. If the tracking is wrong in some frames, user can provide keyframe features by few clicks and improve the track.
-The main challenge of using interactive feature tracking on tracking birds is distinguishing between tracked birds. The system records fixed-size image patches for tracking feature points, such as eye on a face. However, in case of tracking bird flock, all birds look similar in small patches. It leads to many errors found in the result, making wrong tracking data. Therefore, more manual manipulations need to be done to get an optimal track. On average, user can complete the track data of one bird in a 200-frame video in less than 1 minute.
+The main challenge of using interactive feature tracking on tracking birds is distinguishing between tracked birds. The system records fixed-size image patches for tracking feature points, such as eye on a face. However, in case of tracking bird flock, all birds look similar in small patches. It leads to many errors found in the result, making wrong tracking data. Therefore, more manual manipulations need to be done to get an optimal track. On average, user can complete the track data of one bird in a 200-frame video in less than 1 second.
 
 
 
@@ -81,6 +81,9 @@ as error function to be minimized in optimization stage to retain trajectory smo
 \section{Flock behavior similarity}
 
 
+We use Reynolds' boid model as basic flock behaviors. Each bird in flock, which is called boid, observes three steering rules: separation, cohesion, and alignment. The definitions of these steering rules rely on the neighbors of the boid. The neighbors of one boid include its surrounding neighbors who are sufficiently close, and each rule has its perceptual neighborhood. Figure \ref{figure:boid} illustrates the definition of three rules. To calculate flock similarity, target position of boid $n$ in frame $f$ must be calculated first, and then compared with the predicted boid position. Target position is the sum of the three rules above. Here we further the calculation of three steering rules.
+
+
 \begin{figure}[h]
  \begin{center}
   \includegraphics[width=1.0\textwidth]{boid.eps}
@@ -88,9 +91,6 @@ as error function to be minimized in optimization stage to retain trajectory smo
  \caption{Three boid rules. (left) separation behavior, (middle) Cohesion behavior, (right) alignment behavior.}
  \label{figure:boid}
 \end{figure}
-
-
-We use Reynolds' boid model as basic flock behaviors. Each bird in flock, which is called boid, observes three steering rules: separation, cohesion, and alignment. The definitions of these steering rules rely on the neighbors of the boid. The neighbors of one boid include its surrounding neighbors who are sufficiently close, and each rule has its perceptual neighborhood. Figure \ref{figure:boid} illustrates the definition of three rules. To calculate flock similarity, target position of boid $n$ in frame $f$ must be calculated first, and then compared with the predicted boid position. Target position is the sum of the three rules above. Here we further the calculation of three steering rules.
 
 
 Separation steering behavior gives a boid the ability to maintain a certain separation distance from others nearby and to prevent boids from crowding together. We think that separation rule is the most important rule for creating nature flock motion, since collision with other birds is obviously unnatural. To compute separation force, first a search is made to find other boids within the specified neighborhoods. For each nearby boid, the force is computed by subtracting the positions of the boid and the nearby boids, normalizing, and then applying a $1/r$ weighting, making force of nearer nearby boid stronger. All forces for each nearby boid are summed together to produce the overall separation force.
@@ -102,7 +102,7 @@ Cohesion steering behavior give a boid the ability to approach and form a group 
 Alignment steering behavior gives a boid the ability to align itself, heading in the same direction with other nearby boids. However, since in the optimization stage, we only consider optimizing position of each boid, we do not use alignment rule here. Instead, we refine the alignment after optimization is done.
 
 
-\begin{algorithm}[p]
+\begin{algorithm}[h]
 \SetAlgoLined
 \tcp{Calculate separation force $\vec{s}$ of bird n}
 $\vec{s} \leftarrow \vec{0}$ \;
@@ -121,7 +121,7 @@ $\vec{s} \leftarrow \vec{s} / neighbor$ \;
 \end{algorithm}
 
 
-\begin{algorithm}[p]
+\begin{algorithm}[h]
 \SetAlgoLined
 \tcp{Calculate cohesion force $\vec{c}$ of bird n}
 $\vec{c} \leftarrow \vec{0}$ \;
@@ -136,12 +136,14 @@ $\vec{c} \leftarrow \vec{s} / (n-1)$ \;
 
 
 Combining rules above, now we can calculate flock behavior similarity term $f(.)$ in equation \ref{eq:2} by calculating Euclidean distance between the target position and predicted position. Algorithms of calculating separation and cohesion are shown in Algorithm \ref{algo:separation} and \ref{algo:coherence}. In calculating separation vector $\vec{s}$, a neighborhood distance $d_{sep}$ is set to decide the minimum distance to keep in flock motion between each birds. Tuning this parameter, which can also be adjusted by user in optimization stage, is considered as an interactive element in our system. In boid algorithm, a neighborhood of cohesion is also set. However, since we assume all birds in input video belong to one flock that are aware of each other, we just consider every birds in the flock for calculating cohesion force. This can also reduce number of parameters while keeping other parameters more focused.
+
+
 In most flock simulation approaches, collision is detected in advance by adjusting its direction and speed when other agents are about to collide. In our flock model, since we have separation rule that separate, birds tend to move away to each other when they are too close. Therefore, we do not handle collision avoidance.
 
 
 \section{Frame-by-frame optimization}
 
-\begin{algorithm}% [H]
+\begin{algorithm}[h]
 \SetAlgoLined
 \KwData{Trace set $X=\big\{d_n^f\big\}$}
 %\KwResult{how to write algorithm with \LaTeX2e }
@@ -190,7 +192,7 @@ Since target error function can be calculated in each frame, with the inequality
 (TODO:OPTIMIZATION DETAIL)
 
 
-By now, we have introduced 5 parameters for optimization stage: $\lambda_{t}$ for weight of trajectory smoothness, $\lambda_{f}$ for weight of flock behavior similarity, $w_{sep}$ for weight of separation rule, $d_{sep}$ for neighborhood distance for separation rule, $d_{near}$ for near constraint of depth and $d_{far}$ for far constraint. In our system, these parameters are treated as interactive elements of our system. Since the optimization can be done in seconds, user can see the result and adjust parameter can do the optimization again to get better results. 
+By now, we have introduced 5 parameters for optimization stage: $\lambda_{t}$ for weight of trajectory smoothness, $\lambda_{f}$ for weight of flock behavior similarity, $w_{sep}$ for weight of separation rule, $d_{sep}$ for neighborhood distance for separation rule, $d_{near}$ for near constraint of depth and $d_{far}$ for far constraint. In our system, these parameters are treated as interactive elements of our system. Since the optimization can be done in seconds, user can see the result and adjust parameter can do the optimization again to get better results. Figure \ref{figure:ui} (TODO: FIGURE) illustrates our user interface. (TODO: UI DESCRIPTION)
 
 
 \section{Modeling flock motion}
