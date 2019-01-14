@@ -22,7 +22,7 @@
 \end{figure}
 
 
-Figure \ref{figure:system}  shows an overview of our method. As mentioned in Chapter 1, our method synthesizes three-dimensional bird flock motion from input video by predicting depths for each bird in each frame. First, trace data of each bird in the video is retrieved from input video. With the interactive feature tracking technique, track data, which contains two-dimensional projection position trajectory of each bird, can be retrieved with the help of user's indications. The set of track data is denoted $P=\big\{p_n^f\big\}_{n=1...N,f=1...F}$ , where $p_n^f=(x_n^f, y_n^f)$, representing two-dimensional projection on screen, as shown in figure \ref{figure:view} Next, depth for each bird in every frame is predicted in optimization step. The goal of predicting depth is to maintain the quality of flight trajectory. Here, we consider an image sequence of length $F$ frames as input, with $N$ birds in each frame. Track data contains two-dimensional projection of each bird in the input video. The set of track data is denoted $P=\big\{p_n^f\big\}_{n=1...N,f=1...F}$ , where $p_n^f=(x_n^f, y_n^f)$, representing two-dimensional projection on screen, as shown in Figure \ref{figure:view}. We want to predict depth $d_n^f$ of bird $n$ in frame $f$, while maintain the two properties above. The quality of a flight with a candidate depth set $X=\big\{d_n^f\big\}_{n=1...N,f=1...F}$ can be defined as:
+Figure \ref{figure:system}  shows an overview of our method. As mentioned in Chapter 1, our method synthesizes three-dimensional bird flock motion from input video by predicting depths for each bird in each frame. First, trace data of each bird in the video is retrieved from input video. With the interactive feature tracking technique, track data, which contains two-dimensional projection position trajectory of each bird, can be retrieved with the help of user's indications. Next, depth for each bird in every frame is predicted in optimization step. The goal of predicting depth is to maintain the quality of flight trajectory. Here, we consider an image sequence of length $F$ frames as input, with $N$ birds in each frame. Track data contains two-dimensional projection of each bird in the input video. The set of track data is denoted $P=\big\{p_n^f\big\}_{n=1...N,f=1...F}$ , where $p_n^f=(x_n^f, y_n^f)$, representing two-dimensional projection on screen, as shown in Figure \ref{figure:view}. We want to predict depth $d_n^f$ of bird $n$ in frame $f$, while maintain the two properties above. The quality of a flight with a candidate depth set $X=\big\{d_n^f\big\}_{n=1...N,f=1...F}$ can be defined as:
 
 
 \begin{equation}\label{eq:1}
@@ -135,7 +135,7 @@ $\vec{c} \leftarrow \vec{s} / (n-1)$ \;
 \end{algorithm}
 
 
-Combining rules above, now we can calculate flock behavior similarity term $f(.)$ in equation \ref{eq:2} by calculating Euclidean distance between the target position and predicted position. Algorithms of calculating separation and cohesion are shown in Algorithm \ref{algo:separation} and \ref{algo:coherence}. In calculating separation vector $\vec{s}$, a neighborhood distance $d_{sep}$ is set to decide the minimum distance to keep in flock motion between each birds. Tuning this parameter, which can also be adjusted by user in optimization stage, is considered as an interactive element in our system. In boid algorithm, a neighborhood of cohesion is also set. However, since we assume all birds in input video belong to one flock that are aware of each other, we just consider every birds in the flock for calculating cohesion force. This can also reduce number of parameters while keeping other parameters more focused.
+Combining rules above, now we can calculate flock behavior similarity term $f(.)$ in equation \ref{eq:2} by calculating Euclidean distance between the target position and predicted position. Algorithms of calculating separation and cohesion are shown in Algorithm \ref{algo:separation} and \ref{algo:coherence}. In calculating separation vector $\vec{s}$, a neighborhood distance $d_{sep}$ is set to decide the minimum distance to keep in flock motion between each birds. Tuning this parameter, which can be done by user in optimization stage, is considered as an interactive element in our system. In boid algorithm, a neighborhood of cohesion is also set. However, since we assume all birds in input video belong to one flock that are aware of each other, we just consider every birds in the flock for calculating cohesion force. This can also reduce number of parameters while keeping other parameters more focused.
 
 
 In most flock simulation approaches, collision is detected in advance by adjusting its direction and speed when other agents are about to collide. In our flock model, since we have separation rule that separate, birds tend to move away to each other when they are too close. Therefore, we do not handle collision avoidance.
@@ -148,15 +148,15 @@ In most flock simulation approaches, collision is detected in advance by adjusti
 \KwData{Trace set $X=\big\{d_n^f\big\}$}
 %\KwResult{how to write algorithm with \LaTeX2e }
 \tcp{Algorithm start}
-Assign N bird positions in frame 1 \;
+Scatter bird positions in frame 1 \;
 \tcp{Frame-by-frame optimization}
 \For{$i\leftarrow 2$ \KwTo $F$}{
   $sum \leftarrow 0$ \;
-  \tcp{Initial speed}
   \For{$j\leftarrow 1$ \KwTo $N$}{
     $\vec{v} \leftarrow b_j^i - b_j^{i-1}$ \;
     \If{i = 2}{
-      $sum\leftarrow sum + || ||\vec{v}|| - \lambda_{speed}||$ \;
+      \tcp{Initial speed}
+      $sum\leftarrow sum + || ||\vec{v}|| - v_{target}||$ \;
     }
     \Else{
       \tcp{Trajectory smoothness}
@@ -172,27 +172,40 @@ Assign N bird positions in frame 1 \;
   Minimize $sum$ \;
 }
 
-\caption{Optimization algorithm detail.}
+\caption{Optimization algorithm.}
 \label{algo:optimization}
 \end{algorithm}
 
 
 
-The task in our optimization stage is to minimize error function equation \ref{eq:1} with target depth set $X$. Totally, since we have track data of $N$ birds in $F$ frames, there are $N{\times}F$ target depths. If the optimization is done globally, the computation time will be costly. Since our goal is to make system that user can adjust the result interactively in real time, we consider doing the optimization frame-by-frame. Frame-by-frame optimizations means we do not optimize Equation \ref{eq:1} directly, instead, we predict $N$ depths in frame $f$ from the first frame to next frame, based on the results from last frames. That is, to optimize Equation \ref{eq:2} for $n=1...N$ This approach greatly decreases computation time, making it possible for user to do the optimization repeatedly while adjusting parameters.
+The task in our optimization stage is to minimize error function equation \ref{eq:1} with target depth set $X$. Totally, since we have track data of $N$ birds in $F$ frames, there are $N{\times}F$ target depths. If the optimization is done globally, the computation time will be costly. Since our goal is to make system that user can adjust the result interactively in real time, we consider doing the optimization frame-by-frame. Frame-by-frame optimizations means we do not optimize Equation \ref{eq:1} directly, instead, we predict $N$ depths in frame $f$ from the first frame to next frame, based on the results from last frames. That is, to optimize Equation \ref{eq:2} for $n=1...N$ This approach greatly decreases computation time, making it possible for user to do the optimization and see the result interactively while adjusting parameters.
 
 
-We implement the optimization part using NLopt library \cite{NLopt} with optimization algorithm constrained optimization by linear approximation (COBYLA)\cite{COBYLA}. We assume bird flock fly in an area in view field of the camera, a near and a far constraint of depth is set as:
+To prevent optimization result make bird flock fly too far or too near to the camera, as inequality constraints in optimization algorithm, a near and a far constraint of depth are set as:
 
 
 \begin{equation}\label{eq:depth}
 d_{near} < d < d_{far}
 \end{equation}
 
-Since target error function can be calculated in each frame, with the inequality constraint \ref{eq:depth}, optimized $X$ can be found as result.  Algorithm \ref{algo:optimization}  shows our optimization algorithm.
-(TODO:OPTIMIZATION DETAIL)
+
+However, since constraints $d_{near}$ and $d_{far}$ does not affect the result much. It only avoid flock fly too near or too far to the camera, which seldom happens. Therefore, we do not consider these two parameters as interactive elements for user. Since target error function can be calculated in each frame, with the inequality constraint \ref{eq:depth}, after optimization is done in every frame, optimized $X$ can be found as result.
 
 
-By now, we have introduced 5 parameters for optimization stage: $\lambda_{t}$ for weight of trajectory smoothness, $\lambda_{f}$ for weight of flock behavior similarity, $w_{sep}$ for weight of separation rule, $d_{sep}$ for neighborhood distance for separation rule, $d_{near}$ for near constraint of depth and $d_{far}$ for far constraint. In our system, these parameters are treated as interactive elements of our system. Since the optimization can be done in seconds, user can see the result and adjust parameter can do the optimization again to get better results. Figure \ref{figure:ui} (TODO: FIGURE) illustrates our user interface. (TODO: UI DESCRIPTION)
+Algorithm \ref{algo:optimization}  shows our optimization algorithm. As mentioned above, our frame-by-frame optimization optimizes each frame based on the result from last frames. However, we do not have any previous frame for the first frame. Therefore, we have to decide the initial positions of $N$ birds in the first frame. This part can also be discussed in many aspects. However, we decide to make this part simple: just scatter it in the range within $d_{near}$ and $d_{far}$ randomly, with at least a distance between them.
+
+
+After the positions of birds in the first frame are decided, next is the second frame. Since the distance of bird positions between frame 1 and frame 2 greatly affects optimization in later frames, the position in frame 2 is important. Here, we use a user-defined speed factor $v_{target}$ as a reference to decide the positions in frame 2. We simply spawn birds in frame 2 in position that approximate the defined distance $v_{target}$ to the position in frame 1.
+
+
+The reason why we do not dig in the part of deciding initial positions is that it is less important than how trajectory shows in flock motion, since our goal is not to reproduce the original flock motion. That is, how initial positions are decided does not affect the evaluation of the result. Thus, we focus on the transition of bird flock rather than initial position. 
+
+
+After the positions in frame 1 and 2 are decided, now we can apply the rule of trajectory smoothness and flock behavior similarity based on positions in previous frames The first term, trajectory smoothness, is calculated as velocity difference between this frame and last frame. The second term, flock behavior similarity, is calculated as sum of separation force $\vec{s}$ and cohesion force $\vec{c}$, which are shown in \ref{algo:separation} and \ref{algo:coherence}. We balance these two force using parameter $w_{sep}$, which is considered as an interactive element in our system. As mentioned in section 3.4, separation force prevents birds from colliding, while cohesion force keeps flock stay together. Final force is decided as $(w_{sep} \vec{s}+(1-w_{sep})\vec{c})$. By tuning this from 0 to 1, the user can decide the flock in result to scatter or gather. After two terms are decided, we also balance the two terms are by two parameters: $\lambda_{t}$ and $\lambda_{f}$, balancing the trajectory smoothness and flock simulation similarity. After the sum of two terms are calculated, it is optimized by changing $d_n^f$. After the optimal depth $d_n^f$ is solved by the optimization algorithm, the system moves to next frame until all frames are done.
+
+
+We implement the optimization part using NLopt library \cite{NLopt} with optimization algorithm constrained optimization by linear approximation (COBYLA)\cite{COBYLA}.
+
 
 
 \section{Modeling flock motion}
@@ -201,3 +214,18 @@ By now, we have introduced 5 parameters for optimization stage: $\lambda_{t}$ fo
 After we get the optimized depth data, next step is to visualize the optimized flock motion. We implement it with Unity\cite{Unity}. And optimization system is loaded as plugin to make it can be used in an interactive way.
 After the position of each bird in every frame is predicted, to make good flock motion, refinement must be done. Since the system only finds optimal position of each bird, orientation needs to be assigned to complete flock motion. Here we just simply decide orientation of each bird frame-by-frame based on its current position and position in last frame.
 (TODO:MODELING DETAIL)
+
+
+\section{Interactive user interface}
+
+
+\begin{figure}[h]
+ \begin{center}
+  \includegraphics[width=1.0\textwidth]{ui.eps}
+ \end{center}
+ \caption{User interface of our system in optimization stage.}
+ \label{figure:ui}
+\end{figure}
+
+
+By now, we have introduced 5 parameters for optimization stage: $v_{target}$ for target speed of each bird, $\lambda_{t}$ for weight of trajectory smoothness, $\lambda_{f}$ for weight of flock behavior similarity, $w_{sep}$ for weight of separation rule, and $d_{sep}$ for neighborhood distance for separation rule. In our system, these parameters are treated as interactive elements of our system. Since the optimization can be done in seconds, user can see the result and adjust parameter can do the optimization again to get better results. Figure \ref{figure:ui} illustrates our user interface. (TODO: UI DESCRIPTION)
