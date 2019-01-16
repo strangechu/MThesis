@@ -4,26 +4,26 @@
 \section{Evaluation}
 
 
-In this paper, we aim to synthesize visually plausible flock motion from video by However, as mentioned in Chapter 1, due to difficulties of obtaining data from real flocks, we do not have ground truth to numerically evaluate our method.
+In this paper, we aim to synthesize visually plausible flock motion from video by However, as mentioned in Chapter 1, due to difficulties of obtaining data from real flocks, we do not have ground truth to numerically evaluate our method. As future work, user test can be done by comparing our result with other result generated with naive methods to evaluate our method.
 
 
 \section{Bird tracking}
 
 
-Another limitation in our system is that we assume all birds stay in the view field of camera. Although it is possible to generate this kind of video from flock simulation system, it is difficult to have such video from real bird flock video. It is common that birds leave and enter the view field, which is not considered in our system. In addition, our system assumes that camera is placed in a fixed position, while it is common that bird videos are taken with moving cameras.
+Although the research focus on predicting three-dimensional positions, we state that bird tracking is still a problem to solve. In our experiment, we found that bird tracking is the bottleneck of the system. Although optimization stage in our system can be done in seconds, it still needs lots of time in the tracking stage. For example, in tracking stage, manually obtaining track data takes about 1 minute for 1 bird in a 10-second video. It takes more time than tracking other objects, because all birds look alike in the video, resulting in more adjustment of the track result. The time needed for tracking also limits the number of birds to deal with in a single video. It is fine to track several birds by human eyes. However, when the number of bird increase to like 100 or more, it becomes impossible to track every bird if the flock, since current system only allows user to track one bird at a time. As a future work, another approach for tracking and synthesizing these dense flock birds should be proposed.
+
+
+Another limitation in our system is that we assume all birds stay in the view field of camera. Although it is possible to generate this kind of video from flock simulation system, it is difficult to have such video from real bird flock video. It is common that birds leave and enter the view field, which is not considered in our system. In addition, our system assumes that camera is placed in a fixed position, while it is common that bird videos are taken with moving cameras. This makes the system not so capable of using real bird video as input.
 
 
 \section{Flock modeling}
 
 
-Modeling flocks can be further studied to make better flock motion. In this research we only consider trajectory smoothness and flock behavior. However, we do not consider environmental effect such as wind or obstacles. In addition, bird locomotion is also not considered while it is a critical part for creating natural flock motion. 
+Modeling flocks can be further studied to make better flock motion. In this research we only consider trajectory smoothness and flock behavior. However, we do not consider environmental effect such as aerodynamics or obstacles. In addition, bird locomotion is also not considered while it is a critical part for creating natural flock motion. 
 Although the system allows user to change parameters to modify result, the ability of modification is still quite limited. 
 
 
 \section{Sketch input}
 
 
-The system can be further developed to receive human-drawn sketch as input. Since human sketch is similar to two-dimension track data obtained from video.
-
-
-(TODO: USER INTERFACE DETAIL)
+The system can be further developed to receive human-drawn sketch as input. Since human sketch is similar to two-dimension track data obtained from video. However, drawing track data by hand is not as instinctive as it seems. We consider sketch input as our future work.
