@@ -22,7 +22,7 @@
 \end{figure}
 
 
-Figure \ref{figure:system}  shows an overview of our method. As mentioned in Chapter 1, our method synthesizes three-dimensional bird flock motion from input video by predicting depths for each bird in each frame. First, trace data of each bird in the video is retrieved from input video. With the interactive feature tracking technique, track data, which contains two-dimensional projection position trajectory of each bird, can be retrieved with the help of user's indications. Next, depth for each bird in every frame is predicted in optimization step. The goal of predicting depth is to maintain the quality of flight trajectory. Here, we consider an image sequence of length $F$ frames as input, with $N$ birds in each frame. Track data contains two-dimensional projection of each bird in the input video. The set of track data is denoted $P=\big\{p_n^f\big\}_{n=1...N,f=1...F}$ , where $p_n^f=(x_n^f, y_n^f)$, representing two-dimensional projection on screen, as shown in Figure \ref{figure:view}. We want to predict depth $d_n^f$ of bird $n$ in frame $f$, while maintain the two properties above. The quality of a flight with a candidate depth set $X=\big\{d_n^f\big\}_{n=1...N,f=1...F}$ can be defined as:
+Figure \ref{figure:system}  shows an overview of our method. As mentioned in Chapter 1, our method synthesizes three-dimensional bird flock motion from input video by predicting depths for each bird in each frame. First, trace data of each bird in the video is retrieved from input video. With the interactive feature tracking technique, track data, which contains two-dimensional projection position trajectory of each bird, can be retrieved with the help of user's indications. Next, depth for each bird in every frame is predicted in optimization step. The goal of predicting depth is to maintain the quality of flight trajectory, which is separated in two terms: trajectory smoothness and flock behavior similarity. These two terms will be discussed in later sections. Here, we consider an image sequence of length $F$ frames as input, with $N$ birds in each frame. Track data contains two-dimensional projection of each bird in the input video. The set of track data is denoted $P=\big\{p_n^f\big\}_{n=1...N,f=1...F}$ , where $p_n^f=(x_n^f, y_n^f)$, representing two-dimensional projection on screen, as shown in Figure \ref{figure:view}. We want to predict depth $d_n^f$ of bird $n$ in frame $f$, while maintain the two properties above. The quality of a flight with a candidate depth set $X=\big\{d_n^f\big\}_{n=1...N,f=1...F}$ can be defined as:
 
 
 \begin{equation}\label{eq:1}
@@ -35,7 +35,7 @@ Figure \ref{figure:system}  shows an overview of our method. As mentioned in Cha
 \end{equation}
 
 
-$e(n,f)$ denotes error function for bird n in frame f, which includes a trajectory smoothness term $t(.)$, and a flock behavior term $f(.)$. $\lambda_s$ and $\lambda_t$ are tuning parameters respecting to trajectory smoothness and flock behavior. Thus, the predicting problem can be restated as an optimization problem: choose $X$ to minimize $E(X)$. After the optimal $X$ is found, with the predefined camera parameter and optimal depth $d$, we can get world position of the bird from its screen position.
+$e(n,f)$ denotes error function for bird n in frame f, which includes a trajectory smoothness term $t(.)$, and a flock behavior term $f(.)$. $\lambda_s$ and $\lambda_t$ are tuning parameters corresponding to trajectory smoothness and flock behavior. Thus, the predicting problem can be restated as an optimization problem: choose $X$ to minimize $E(X)$. After the optimal $X$ is found, with the predefined camera parameter and optimal depth $d$, we can get world position of the bird from its screen position.
 
 
 In most simulation system, velocity of an object is calculated upon mass and force in simulation steps. However, since our optimization method is over frames, we use position-based dynamics system \cite{PBD}, in which velocity in frame f is denoted as
@@ -51,8 +51,8 @@ For $s$ and $t$ in equation \ref{eq:2}, we use the simple Euclidean distance fun
 \section{Bird tracking}
 
 
-To obtain trajectory of each bird in the input video, tracking technique is used in our method. We use tracking system ZooTracer\cite{ZooTracer}, developed by Microsoft research, to do the task. ZooTracer is based on interactive feature tracking technique, proposed by Buchanan and Fitzgibbon \cite{Tracking}. With the tracking system, after preprocessing is done, the user can make tracking data interactively from input video in real time. The system predicts the trajectory of single bird in the video based on user's initial indication. If the tracking is wrong in some frames, user can provide keyframe features by few clicks and improve the track.
-The main challenge of using interactive feature tracking on tracking birds is distinguishing between tracked birds. The system records fixed-size image patches for tracking feature points, such as eye on a face. However, in case of tracking bird flock, all birds look similar in small patches. It leads to many errors found in the result, making wrong tracking data. Therefore, more manual manipulations need to be done to get an optimal track. On average, user can complete the track data of one bird in a 200-frame video in less than 1 second.
+To obtain trajectory of each bird in the input video, tracking technique is used in our method. We use an existing tracking system ZooTracer\cite{ZooTracer}, developed by Microsoft research, to do the task. ZooTracer is based on interactive feature tracking technique, proposed by Buchanan and Fitzgibbon \cite{Tracking}. With the tracking system, after preprocessing is done, the user can make tracking data interactively from input video in real time. The system predicts the trajectory of single bird in the video based on user's initial indication. If the tracking is wrong in some frames, user can provide keyframe features by few clicks and improve the track.
+The main challenge of using interactive feature tracking on tracking birds is distinguishing between tracked birds. The system records fixed-size image patches for tracking feature points, such as eye on a face. However, in case of tracking bird flock, all birds look similar in small patches. It leads to many errors found in the result, making wrong tracking data. Therefore, more manual manipulations need to be done to get an optimal track. On average, user can complete the track data of one bird in a 200-frame video in less than 1 minute.
 
 
 
@@ -63,25 +63,25 @@ The main challenge of using interactive feature tracking on tracking birds is di
  \begin{center}
   \includegraphics[width=1.0\textwidth]{turn.eps}
  \end{center}
- \caption{Trajectory smooth. Figure on the left shows the scenario of sudden turn, while the trajectory on the right is considered better trajectory, since the speed difference is smaller.}
+ \caption{Illustration of trajectory smoothness. Figure on the left shows the scenario of sudden turn, while the trajectory on the right is considered a better trajectory, since the speed difference is smaller.}
  \label{figure:turn}
 \end{figure}
 
 
 
-Trajectory smoothness is the first term in our error function in equation \ref{eq:1}, denoted as $t(.)$. In this term, only the flying trajectory of one bird is considered. We assume that birds minimize its velocity change during flight. The importance of retaining trajectory smoothness is especially obvious when bird is on turning point of the track. In our experiment, we found that if trajectory smooth is not considered, birds will show a sudden turn motion, which is unnatural. Figure \ref{figure:turn} shows the scenario of sudden turn. Trajectory smoothness term is then denoted as:
+Trajectory smoothness is the first term in our error function in equation \ref{eq:1}, denoted as $t(.)$. In this term, only the trajectory of one bird is considered. We assume that a bird tends to minimize its velocity change during its flight. The importance of retaining trajectory smoothness is especially obvious when bird is on turning point of the track. In our experiment, we found that if trajectory smooth is not considered, birds will show a sudden turn motion, which is unnatural. Figure \ref{figure:turn} shows the scenario of sudden turn. Trajectory smoothness term is then denoted as:
 
 \begin{equation}\label{eq:4}
- t(p_n^f, p_n^{f-1},d_n^f) = v_n^f = b_n^f-b_n^{f-1}
+ t(p_n^f, p_n^{f-1},d_n^f) = |||v_n^f||-||v_n^{f-1}||| = |||b_n^f-b_n^{f-1}|| - ||b_n^{f-1}-b_n^{f-2}|||
 \end{equation}
 
-as error function to be minimized in optimization stage to retain trajectory smoothness.
+as first term in error function to be minimized in optimization stage to retain trajectory smoothness.
 
 
 \section{Flock behavior similarity}
 
 
-We use Reynolds' boid model as basic flock behaviors. Each bird in flock, which is called boid, observes three steering rules: separation, cohesion, and alignment. The definitions of these steering rules rely on the neighbors of the boid. The neighbors of one boid include its surrounding neighbors who are sufficiently close, and each rule has its perceptual neighborhood. Figure \ref{figure:boid} illustrates the definition of three rules. To calculate flock similarity, target position of boid $n$ in frame $f$ must be calculated first, and then compared with the predicted boid position. Target position is the sum of the three rules above. Here we further the calculation of three steering rules.
+We use Reynolds' boid model as basic flock behaviors. In boid model, each bird in flock, which is called a boid, observes three steering rules: separation, cohesion, and alignment. The definitions of these steering rules rely on the neighbors of the boid. The neighbors of one boid include its surrounding neighbors who are sufficiently close, and each rule has its perceptual neighborhood. Figure \ref{figure:boid} illustrates the definition of three boid rules. As the basic rules of flock behaviors, we believe that more the result matches the boid rules, the better result is. This idea  To calculate flock similarity, target position of boid $n$ in frame $f$ must be calculated first. The target position is then compared with the predicted boid position. Target position is the sum of the three rules above. Here we further the calculation of three steering rules.
 
 
 \begin{figure}[h]
@@ -93,13 +93,13 @@ We use Reynolds' boid model as basic flock behaviors. Each bird in flock, which 
 \end{figure}
 
 
-Separation steering behavior gives a boid the ability to maintain a certain separation distance from others nearby and to prevent boids from crowding together. We think that separation rule is the most important rule for creating nature flock motion, since collision with other birds is obviously unnatural. To compute separation force, first a search is made to find other boids within the specified neighborhoods. For each nearby boid, the force is computed by subtracting the positions of the boid and the nearby boids, normalizing, and then applying a $1/r$ weighting, making force of nearer nearby boid stronger. All forces for each nearby boid are summed together to produce the overall separation force.
+Separation steering behavior, as shown in Figure \ref{figure:boid} (a), gives a boid the ability to maintain a certain separation distance from others nearby and to prevent boids from crowding together. We think that separation rule is the most important rule for creating nature flock motion, since collision with other birds is obviously unnatural. To compute separation force, first a search is made to find other boids within the specified neighborhoods. For each nearby boid, the force is computed by subtracting the positions of the boid and the nearby boids, normalizing, and then applying a $1/r$ weighting, making force of nearer nearby boid stronger. All forces for each nearby boid are summed together to produce the overall separation force.
 
 
-Cohesion steering behavior give a boid the ability to approach and form a group with other nearby characters. That is, boids steer towards the average position of the nearby boids. This behavior helps flock to form a group and not be too separated. The neighborhood of cohesion is set much bigger than neighborhood of separation does to keep the flock form in group while preventing collision.
+Cohesion steering behavior, as shown in Figure \ref{figure:boid} (b), gives a boid the ability to approach and form a group with other nearby characters. That is, boids steer towards the average position of the nearby boids. This behavior helps flock to form a group and not be too separated. The neighborhood of cohesion is set much bigger than neighborhood of separation does to keep the flock form in group while preventing collision.
 
 
-Alignment steering behavior gives a boid the ability to align itself, heading in the same direction with other nearby boids. However, since in the optimization stage, we only consider optimizing position of each boid, we do not use alignment rule here. Instead, we refine the alignment after optimization is done.
+Alignment steering behavior, as shown in Figure \ref{figure:boid} (c), gives a boid the ability to align itself, heading in the same direction with other nearby boids. However, since in the optimization stage, we only consider optimizing position of each boid, we do not use alignment rule here. Instead, we refine the alignment after optimization is done.
 
 
 \begin{algorithm}[h]
