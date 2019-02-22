@@ -63,13 +63,13 @@ The main challenge of using interactive feature tracking on tracking birds is di
  \begin{center}
   \includegraphics[width=1.0\textwidth]{turn.eps}
  \end{center}
- \caption{Illustration of trajectory smoothness. Figure on the left shows the scenario of sudden turn, while the trajectory on the right is considered a better trajectory, since the speed difference is smaller.}
+ \caption{Illustration of trajectory smoothness. The trajectory in the middle is considered a better trajectory, since the speed difference is smaller.}
  \label{figure:turn}
 \end{figure}
 
 
 
-Trajectory smoothness is the first term in our error function in equation \ref{eq:1}, denoted as $t(.)$. In this term, only the trajectory of one bird is considered. We assume that a bird tends to minimize its velocity change during its flight. The importance of retaining trajectory smoothness is especially obvious when bird is on turning point of the track. In our experiment, we found that if trajectory smooth is not considered, birds will show a sudden turn motion, which is unnatural. Figure \ref{figure:turn} shows the scenario of sudden turn. Trajectory smoothness term is then denoted as:
+Trajectory smoothness is the first term in our error function in equation \ref{eq:1}, denoted as $t(.)$. In this term, only the trajectory of one bird is considered. We assume that a bird tends to minimize its velocity change during its flight. The importance of retaining trajectory smoothness is especially obvious when bird is on turning point of the track. In our experiment, we found that if trajectory smooth is not considered, birds will show a sudden turn motion, which is unnatural. Figure \ref{figure:turn} shows the illustration of trajectory smoothness. Trajectory smoothness term is then denoted as:
 
 \begin{equation}\label{eq:4}
  t(p_n^f, p_n^{f-1},d_n^f) = |||v_n^f||-||v_n^{f-1}||| = |||b_n^f-b_n^{f-1}|| - ||b_n^{f-1}-b_n^{f-2}|||
@@ -189,8 +189,19 @@ d_{near} < d < d_{far}
 \end{equation}
 
 
-However, since constraints $d_{near}$ and $d_{far}$ does not affect the result much. It only avoid flock fly too near or too far to the camera, which seldom happens. Therefore, we do not consider these two parameters as interactive elements for user. Since target error function can be calculated in each frame, with the inequality constraint \ref{eq:depth}, after optimization is done in every frame, optimized $X$ can be found as result.
+However, since constraints $d_{near}$ and $d_{far}$ do not affect the result much. It only avoid flock fly too near or too far to the camera, which seldom happens. Therefore, we do not consider these two parameters as interactive elements for user. Since target error function can be calculated in each frame, with the inequality constraint \ref{eq:depth}, after optimization is done in every frame, optimized $X$ can be found. The definition of our optimization is denoted as:
 
+\begin{equation}\label{eq:definition}
+\{d^f_n\}=\arg\min\sum_{i = 1}^{N}e(i,f)
+\end{equation}
+subject to
+\begin{equation}\label{eq:subject}
+d_{min} < d < d_{max}
+\end{equation}
+and do the frame-by-frame optimization:
+\begin{equation}\label{eq:fbf}
+{d^0_n} -> {d^1_n} -> {d^2_n} -> ...
+\end{equation}
 
 Algorithm \ref{algo:optimization}  shows our optimization algorithm. As mentioned above, our frame-by-frame optimization optimizes each frame based on the result from last frames. However, we do not have any previous frame for the first frame. Therefore, we have to decide the initial positions of $N$ birds in the first frame. This part can also be discussed in many aspects. However, we decide to make this part simple: just scatter it in the range within $d_{near}$ and $d_{far}$ randomly, with at least a distance between them.
 
